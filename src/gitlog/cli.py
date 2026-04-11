@@ -49,7 +49,7 @@ class Language(str, Enum):
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
-        rprint(f"[bold teal]gitlog[/] version [bold]{__version__}[/]")
+        rprint(f"[bold cyan]gitlog[/] version [bold]{__version__}[/]")
         raise typer.Exit()
 
 
@@ -64,7 +64,7 @@ def main(
         help="Show version and exit.",
     ),
 ) -> None:
-    """[bold teal]gitlog[/] \u2014 AI-Powered Changelog & Release Notes Generator."""
+    """[bold cyan]gitlog[/] \u2014 AI-Powered Changelog & Release Notes Generator."""
 
 
 @app.command()
@@ -100,7 +100,7 @@ def generate(
             progress.update(t1, description=f"[green]\u2713[/] Fetched {len(commits)} commits")
 
             progress.add_task("Classifying & generating...", total=None)
-            generator = ChangelogGenerator(settings=settings)
+            generator = ChangelogGenerator(config=settings)
             changelog = generator.generate(commits=commits)
 
         # Render the Changelog using the requested format
@@ -124,7 +124,7 @@ def generate(
             result = MarkdownRenderer(github_repo=settings.github.repo or None).render(changelog)
 
         if dry_run:
-            console.print(Panel(result, title="[bold]Changelog Preview[/]", border_style="teal"))
+            console.print(Panel(result, title="[bold]Changelog Preview[/]", border_style="cyan"))
         else:
             out_path.write_text(result, encoding="utf-8")
             console.print(
@@ -175,7 +175,7 @@ def diff(
         settings = load_settings()
         parser = GitLogParser(repo_path=repo_path)
         commits = parser.get_commits(since=from_tag, until=to_tag)
-        generator = ChangelogGenerator(settings=settings)
+        generator = ChangelogGenerator(config=settings)
         changelog = generator.generate(commits=commits)
 
         from gitlog.renderers.markdown import MarkdownRenderer
@@ -198,7 +198,7 @@ def tweet(
         settings.format = "twitter"
         parser = GitLogParser(repo_path=repo_path)
         commits = parser.get_commits(since=since)
-        generator = ChangelogGenerator(settings=settings)
+        generator = ChangelogGenerator(config=settings)
         changelog = generator.generate(commits=commits)
 
         # Choose the most-relevant entry (Unreleased or latest)
