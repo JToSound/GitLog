@@ -100,6 +100,33 @@ gitlog stats
 gitlog init
 ```
 
+## Note: package name vs Python module
+
+Be careful: the PyPI/project package name (for example `logforge-gitlog`) is not a valid Python module name because it contains a hyphen. The importable module in this repository is `gitlog` (the `src/gitlog/` package), and the console script is `gitlog`.
+
+Wrong:
+
+```bash
+python -m logforge-gitlog generate --dry-run   # ❌ invalid module name
+```
+
+Right:
+
+```bash
+gitlog generate --dry-run
+# or, if you haven't installed the package:
+PYTHONPATH=src python -m gitlog generate --dry-run
+```
+
+If the `gitlog` console script is not available after installation, install editable during development:
+
+```bash
+# from project root
+pip install -e .[dev]
+# then run
+gitlog generate --dry-run
+```
+
 ---
 
 ## Configuration
