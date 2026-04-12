@@ -1,0 +1,38 @@
+name: Upload release assets from PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to target'
+        required: true
+        default: 'v0.1.1'
+      version:
+        description: 'Package version to download from PyPI'
+        required: true
+        default: '0.1.1'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download distributions from PyPI
+        run: |
+          python -m pip install --upgrade pip
+          mkdir -p pypi_dist
+          pip download --no-deps --dest ./pypi_dist logforge-gitlog==${{ inputs.version }}
+          ls -la pypi_dist
+
+      - name: Create or update Release and upload assets
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag }}
+          files: pypi_dist/*
