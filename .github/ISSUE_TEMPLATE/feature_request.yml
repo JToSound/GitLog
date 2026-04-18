@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest a new capability or workflow support
+title: "[Feature] "
+labels: ["feature request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Feature requests with concrete workflow context are prioritized faster.
+  - type: input
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What pain point are you facing today?
+      placeholder: It takes too long to ...
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Real-world use case
+      description: Describe your repository type, team size, and release process
+      placeholder: Monorepo with 8 packages, weekly release cadence, GitHub Actions ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What behavior do you want?
+      placeholder: Add a command/flag/config that ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workaround you tried
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority for your team
+      options:
+        - Critical (blocks release)
+        - High
+        - Medium
+        - Low
+

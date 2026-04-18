@@ -1,0 +1,37 @@
+name: Question / help
+description: Ask about usage, setup, or workflow fit
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include your goal and command examples. This helps us reply faster.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to achieve?
+      placeholder: I want to generate release notes for ...
+    validations:
+      required: true
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you tried?
+      placeholder: |
+        I ran:
+        gitlog generate ...
+        and got ...
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config (.gitlog.toml or flags)
+      render: toml
+  - type: markdown
+    attributes:
+      value: |
+        If your question is broader than one issue, start a Discussion:
+        https://github.com/JToSound/LogForge/discussions
+

@@ -13,7 +13,18 @@
 One command. From git history to a human-readable, structured CHANGELOG.  
 Supports **multiple languages**, **multiple output formats**, and **any LLM**.
 
+If this project saves your release workflow time, please **[⭐ Star the repo](https://github.com/JToSound/LogForge)** and **[open an issue with your use case](https://github.com/JToSound/LogForge/issues/new/choose)**.
+
 </div>
+
+---
+
+## Start Here (30 seconds)
+
+1. **Try it now**: run `gitlog generate --dry-run` in your repo.
+2. **If useful, star it**: https://github.com/JToSound/LogForge
+3. **Share your pain point**: https://github.com/JToSound/LogForge/issues/new/choose
+4. **Ask questions / show your workflow**: https://github.com/JToSound/LogForge/discussions
 
 ---
 
@@ -49,6 +60,21 @@ Below is a very short demo that shows `gitlog generate` producing a changelog in
 - 🔄 **Fallback chain** — LLM failure → rule engine, never interrupts the flow
 - 🧩 **CI/CD ready** — GitHub Actions workflow included out of the box
 - 🏠 **Local inference** — Ollama support for fully private generation
+
+---
+
+## What problem this solves
+
+Release notes are often manual, inconsistent, and easy to forget. LogForge turns commit history into structured changelogs so teams can:
+
+- ship faster without hand-writing each release note,
+- keep change communication consistent across versions,
+- and plug release-note generation directly into CI/CD.
+
+### Before vs After
+
+- **Before**: manually collect commits, summarize by hand, often miss context.
+- **After**: one command generates structured output (Markdown/JSON/HTML/Twitter), plus machine-readable version prediction.
 
 ---
 
@@ -208,6 +234,17 @@ Or use the included `release.yml` which automatically:
 | Anthropic | `claude-3-5-haiku-20241022` | `ANTHROPIC_API_KEY` |
 | Ollama (local) | `ollama/llama3` | *(none required)* |
 | Gemini | `gemini/gemini-1.5-flash` | `GEMINI_API_KEY` |
+
+---
+
+## Community & feedback
+
+- ⭐ Star: https://github.com/JToSound/LogForge
+- 🐞 Report bug: https://github.com/JToSound/LogForge/issues/new?template=bug_report.yml
+- 💡 Request feature: https://github.com/JToSound/LogForge/issues/new?template=feature_request.yml
+- ❓ Ask question: https://github.com/JToSound/LogForge/issues/new?template=question.yml
+- 💬 Discussions: https://github.com/JToSound/LogForge/discussions
+- 📈 Growth execution playbook: [docs/GROWTH_EXECUTION_PLAYBOOK.md](docs/GROWTH_EXECUTION_PLAYBOOK.md)
 
 ---
 

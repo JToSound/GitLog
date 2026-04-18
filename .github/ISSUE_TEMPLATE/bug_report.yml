@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a problem so we can fix it quickly
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this bug. Please provide enough detail so we can reproduce it.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line description of the issue
+      placeholder: gitlog generate crashes when ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands and order
+      placeholder: |
+        1. cd my-repo
+        2. gitlog generate --format html
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: Changelog should be generated successfully.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: Error traceback or unexpected output.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: gitlog version
+      description: Output of `gitlog --version`
+      placeholder: 0.1.1
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: 3.12.10
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traceback
+      render: shell
+
