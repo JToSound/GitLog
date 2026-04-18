@@ -36,23 +36,63 @@ function Upsert-Label([string]$name, [string]$color, [string]$description) {
 }
 
 function Ensure-Issue([string]$title, [string]$body, [string]$labels) {
-    $exists = gh issue list --repo $Repo --search "$title in:title state:open" --json title | ConvertFrom-Json
-    if ($exists.Count -eq 0) {
+    $openIssues = gh issue list --repo $Repo --state open --limit 200 --json title | ConvertFrom-Json
+    $found = $openIssues | Where-Object { $_.title -eq $title }
+    if (-not $found) {
         gh issue create --repo $Repo --title $title --body $body --label $labels *> $null
     }
 }
 
 function Ensure-Discussion([string]$title, [string]$body) {
-    gh help discussion *> $null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "gh discussion command is not available in this gh build. Skipping discussion seed." -ForegroundColor Yellow
+    $parts = $Repo.Split("/")
+    if ($parts.Count -ne 2) {
+        throw "Repo must be in owner/name format."
+    }
+    $owner = $parts[0]
+    $name = $parts[1]
+
+    $query = @"
+query(`$owner:String!,`$name:String!){
+  repository(owner:`$owner,name:`$name){
+    id
+    discussionCategories(first:20){ nodes { id name } }
+    discussions(first:100){ nodes { title } }
+  }
+}
+"@
+    $payload = gh api graphql -f query=$query -F owner=$owner -F name=$name | ConvertFrom-Json
+    $repoNode = $payload.data.repository
+    $found = $repoNode.discussions.nodes | Where-Object { $_.title -eq $title }
+    if ($found) {
         return
     }
-    $exists = gh discussion list --repo $Repo --limit 100 --json title | ConvertFrom-Json
-    $found = $exists | Where-Object { $_.title -eq $title }
-    if (-not $found) {
-        gh discussion create --repo $Repo --category "General" --title $title --body $body *> $null
+    $category = $repoNode.discussionCategories.nodes | Where-Object { $_.name -eq "General" } | Select-Object -First 1
+    if (-not $category) {
+        $category = $repoNode.discussionCategories.nodes | Select-Object -First 1
     }
+    if (-not $category) {
+        Write-Host "No discussion category found. Skipping discussion seed." -ForegroundColor Yellow
+        return
+    }
+    $repoId = $repoNode.id
+    $categoryId = $category.id
+    $mutation = @"
+mutation(`$repositoryId:ID!,`$categoryId:ID!,`$title:String!,`$body:String!){
+  createDiscussion(input:{
+    repositoryId:`$repositoryId,
+    categoryId:`$categoryId,
+    title:`$title,
+    body:`$body
+  }) {
+    discussion { id title url }
+  }
+}
+"@
+    gh api graphql -f query=$mutation `
+        -F repositoryId=$repoId `
+        -F categoryId=$categoryId `
+        -F title=$title `
+        -F body=$body *> $null
 }
 
 Write-Step "Validating GitHub CLI auth"
