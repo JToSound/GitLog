@@ -13,9 +13,15 @@
 One command. From git history to a human-readable, structured CHANGELOG.  
 Supports **multiple languages**, **multiple output formats**, and **any LLM**.
 
-</div>
+## Getting Started with LogForge
 
----
+LogForge is an AI-powered changelog and release notes generator. It's designed to be easy to use and integrate into your development workflow. Here's a step-by-step guide to get you started:
+
+1. **Install LogForge**: You can install LogForge directly from GitHub using pip: `pip install git+https://github.com/JToSound/LogForge.git`
+2. **Set up your repository**: Navigate to your repository and set the `OPENAI_API_KEY` environment variable: `export OPENAI_API_KEY=sk-...`
+3. **Generate your changelog**: Run the command `gitlog generate` to generate your changelog.
+
+That's it! Your `CHANGELOG.md` is ready. 
 
 ## Quick Start
 
@@ -27,17 +33,11 @@ export OPENAI_API_KEY=sk-...
 gitlog generate
 ```
 
-That's it. Your `CHANGELOG.md` is ready. 🎉
-
----
-
 ## 5s Demo
 
 Below is a very short demo that shows `gitlog generate` producing a changelog in under 5 seconds on small repos.
 
 ![Quick demo](docs/demo.svg)
-
----
 
 ## Features
 
@@ -50,8 +50,6 @@ Below is a very short demo that shows `gitlog generate` producing a changelog in
 - 🧩 **CI/CD ready** — GitHub Actions workflow included out of the box
 - 🏠 **Local inference** — Ollama support for fully private generation
 
----
-
 ## Installation
 
 ```bash
@@ -63,8 +61,6 @@ pip install gitlog
 ```
 
 **Requirements:** Python 3.11+, Git
-
----
 
 ## Usage
 
@@ -99,8 +95,6 @@ gitlog stats
 # Interactive setup
 gitlog init
 ```
-
----
 
 ## Configuration
 
@@ -137,8 +131,6 @@ repo = "owner/repo"
 | `max_commits_per_group` | `20` | Max commits shown per category per version |
 | `github.repo` | `""` | `owner/repo` for generating clickable links |
 
----
-
 ## GitHub Actions Integration
 
 Add to your release workflow:
@@ -155,8 +147,6 @@ Or use the included `release.yml` which automatically:
 2. Generates the changelog using gitlog itself
 3. Creates a GitHub Release with the generated notes
 
----
-
 ## Supported LLM Providers
 
 | Provider | Model Example | Env Var |
@@ -165,8 +155,6 @@ Or use the included `release.yml` which automatically:
 | Anthropic | `claude-3-5-haiku-20241022` | `ANTHROPIC_API_KEY` |
 | Ollama (local) | `ollama/llama3` | *(none required)* |
 | Gemini | `gemini/gemini-1.5-flash` | `GEMINI_API_KEY` |
-
----
 
 ## License
 
