@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -35,7 +36,7 @@ class OpenAIProvider(BaseProvider):
             LLMError: If the call fails after retries.
         """
         try:
-            import litellm  # type: ignore[import]
+            import litellm
 
             resp = litellm.completion(
                 model=self._model,
@@ -49,7 +50,7 @@ class OpenAIProvider(BaseProvider):
         except Exception as exc:
             raise LLMError(str(exc)) from exc
 
-    def complete_json(self, system: str, user: str) -> dict:
+    def complete_json(self, system: str, user: str) -> dict[str, Any]:
         """Call OpenAI with JSON mode enabled.
 
         Args:
@@ -63,7 +64,7 @@ class OpenAIProvider(BaseProvider):
             LLMError: If the call or JSON parsing fails.
         """
         try:
-            import litellm  # type: ignore[import]
+            import litellm
 
             resp = litellm.completion(
                 model=self._model,
@@ -74,6 +75,9 @@ class OpenAIProvider(BaseProvider):
                 response_format={"type": "json_object"},
                 temperature=self._temperature,
             )
-            return json.loads(resp.choices[0].message.content or "{}")
+            data = json.loads(resp.choices[0].message.content or "{}")
+            if not isinstance(data, dict):
+                raise LLMError("Model did not return a JSON object.")
+            return data
         except Exception as exc:
             raise LLMError(str(exc)) from exc

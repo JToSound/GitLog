@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -41,7 +42,7 @@ class OllamaProvider(BaseProvider):
             LLMError: On connection or API failure.
         """
         try:
-            import litellm  # type: ignore[import]
+            import litellm
 
             resp = litellm.completion(
                 model=self._model,
@@ -56,7 +57,7 @@ class OllamaProvider(BaseProvider):
         except Exception as exc:
             raise LLMError(str(exc)) from exc
 
-    def complete_json(self, system: str, user: str) -> dict:
+    def complete_json(self, system: str, user: str) -> dict[str, Any]:
         """Call Ollama and attempt to parse JSON from the response.
 
         Args:
@@ -73,8 +74,17 @@ class OllamaProvider(BaseProvider):
             system + "\nReturn ONLY valid JSON. No markdown fences.", user
         )
         # Strip potential markdown fences
-        stripped = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        stripped = raw.strip()
+        if stripped.startswith("```json"):
+            stripped = stripped[7:].strip()
+        elif stripped.startswith("```"):
+            stripped = stripped[3:].strip()
+        if stripped.endswith("```"):
+            stripped = stripped[:-3].strip()
         try:
-            return json.loads(stripped)
+            data = json.loads(stripped)
+            if not isinstance(data, dict):
+                raise LLMError("Model did not return a JSON object.")
+            return data
         except json.JSONDecodeError as exc:
             raise LLMError(f"JSON parse error: {exc}\nRaw: {raw[:200]}") from exc

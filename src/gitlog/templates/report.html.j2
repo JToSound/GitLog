@@ -1,49 +1,77 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="{{ language }}" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Changelog</title>
 <style>
   :root {
-    --bg: #f7f6f2; --surface: #fff; --text: #1a1a1a; --text-muted: #6b7280;
-    --border: #e5e7eb; --primary: #3b82f6; --radius: 0.75rem;
-    --shadow: 0 1px 3px rgba(0,0,0,.08);
+    --bg: #f4f6ff;
+    --bg-grad-a: rgba(59,130,246,.35);
+    --bg-grad-b: rgba(20,184,166,.22);
+    --surface: rgba(255,255,255,.58);
+    --surface-strong: rgba(255,255,255,.72);
+    --text: #111827;
+    --text-muted: #4b5563;
+    --border: rgba(255,255,255,.45);
+    --primary: #3b82f6;
+    --radius: 1rem;
+    --shadow: 0 20px 45px rgba(15,23,42,.16);
+    --glass-blur: 18px;
   }
   [data-theme=dark] {
-    --bg: #111827; --surface: #1f2937; --text: #f9fafb; --text-muted: #9ca3af;
-    --border: #374151; --primary: #60a5fa;
+    --bg: #040712;
+    --bg-grad-a: rgba(59,130,246,.2);
+    --bg-grad-b: rgba(16,185,129,.14);
+    --surface: rgba(17,24,39,.56);
+    --surface-strong: rgba(17,24,39,.74);
+    --text: #f9fafb;
+    --text-muted: #94a3b8;
+    --border: rgba(148,163,184,.22);
+    --primary: #60a5fa;
+    --shadow: 0 24px 48px rgba(2,6,23,.55);
+    --glass-blur: 22px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-         background: var(--bg); color: var(--text); line-height: 1.6; }
+         background:
+           radial-gradient(circle at 12% 10%, var(--bg-grad-a), transparent 42%),
+           radial-gradient(circle at 88% 5%, var(--bg-grad-b), transparent 36%),
+           var(--bg);
+         color: var(--text); line-height: 1.6; min-height: 100vh; }
   .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
   header { display: flex; align-items: center; justify-content: space-between;
-           margin-bottom: 2rem; }
+            margin-bottom: 2rem; }
   h1 { font-size: 2rem; font-weight: 700; }
-  .toggle { background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: .4rem .8rem; cursor: pointer;
-            color: var(--text); font-size: .85rem; }
+  .toggle { background: var(--surface-strong); border: 1px solid var(--border);
+             border-radius: var(--radius); padding: .4rem .8rem; cursor: pointer;
+             color: var(--text); font-size: .85rem; backdrop-filter: blur(var(--glass-blur));
+             box-shadow: var(--shadow); }
   .timeline { position: relative; }
   .timeline::before { content: ''; position: absolute; left: 1.25rem; top: 0;
-                       bottom: 0; width: 2px; background: var(--border); }
+                        bottom: 0; width: 2px;
+                        background: linear-gradient(to bottom, rgba(255,255,255,.75), var(--border)); }
   .version-block { position: relative; padding-left: 3.5rem; margin-bottom: 2.5rem; }
   .version-dot { position: absolute; left: .65rem; top: .35rem; width: 1.25rem;
-                 height: 1.25rem; border-radius: 50%; background: var(--primary);
-                 border: 3px solid var(--bg); }
+                  height: 1.25rem; border-radius: 50%;
+                  background: radial-gradient(circle at 30% 30%, #fff, var(--primary));
+                  border: 3px solid transparent; box-shadow: 0 0 0 1px var(--border), 0 0 20px rgba(59,130,246,.35); }
   .version-card { background: var(--surface); border: 1px solid var(--border);
-                  border-radius: var(--radius); padding: 1.5rem;
-                  box-shadow: var(--shadow); }
+                   border-radius: var(--radius); padding: 1.5rem;
+                   box-shadow: var(--shadow); backdrop-filter: blur(var(--glass-blur));
+                   transition: transform .22s ease, box-shadow .22s ease; }
+  .version-card:hover { transform: translateY(-3px); box-shadow: 0 28px 55px rgba(15,23,42,.2); }
   .version-header { display: flex; align-items: baseline; gap: 1rem;
                     margin-bottom: 1rem; }
   .version-tag { font-size: 1.25rem; font-weight: 700; }
   .version-date { color: var(--text-muted); font-size: .875rem; }
   .category { margin-bottom: 1rem; }
+  .scope-title { margin: .15rem 0 .45rem; font-size: .82rem; color: var(--text-muted); }
   .badge { display: inline-block; padding: .15rem .55rem; border-radius: 999px;
            font-size: .75rem; font-weight: 600; color: #fff; margin-bottom: .5rem; }
   .commit-list { list-style: none; }
   .commit-list li { padding: .25rem 0; font-size: .9rem; color: var(--text-muted);
-                    border-bottom: 1px solid var(--border); }
+                     border-bottom: 1px solid var(--border); }
   .commit-list li:last-child { border-bottom: none; }
   .sha { font-family: monospace; font-size: .8rem; margin-left: .5rem;
          color: var(--primary); }
@@ -54,11 +82,11 @@
 <body>
 <div class="container">
   <header>
-    <h1>📋 Changelog</h1>
-    <button class="toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+    <h1>{{ labels.title }}</h1>
+    <button class="toggle" onclick="toggleTheme()">{{ labels.toggle }}</button>
   </header>
   <div class="timeline">
-    {% for entry in changelog.entries %}
+    {% for entry in entries %}
     <div class="version-block">
       <div class="version-dot"></div>
       <div class="version-card">
@@ -66,13 +94,16 @@
           <span class="version-tag">{{ entry.version }}</span>
           {% if entry.date %}<span class="version-date">{{ entry.date }}</span>{% endif %}
         </div>
-        {% for ct, commits in entry.groups.items() %}
-        {% if commits %}
+        {% for category in entry.categories %}
+        {% for scoped in category.scopes %}
         <div class="category">
-          <span class="badge" style="background:{{ category_colors.get(ct, '#6b7280') }}">
-            {{ ct.value }}</span>
+          <span class="badge" style="background:{{ category_colors.get(category.type, '#6b7280') }}">
+            {{ category.type_label }}</span>
+          {% if group_by_scope and scoped.name %}
+          <div class="scope-title"><strong>{{ labels.scope }}:</strong> <code>{{ scoped.name }}</code></div>
+          {% endif %}
           <ul class="commit-list">
-            {% for commit in commits %}
+            {% for commit in scoped.commits %}
             <li>
               {{ commit.message | e }}
               {% if github_repo %}
@@ -85,7 +116,7 @@
             {% endfor %}
           </ul>
         </div>
-        {% endif %}
+        {% endfor %}
         {% endfor %}
       </div>
     </div>

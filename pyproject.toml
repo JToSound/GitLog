@@ -52,7 +52,7 @@ Repository = "https://github.com/JToSound/LogForge"
 Changelog = "https://github.com/JToSound/LogForge/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["gitlog"]
+packages = ["src/gitlog"]
 
 [tool.ruff]
 line-length = 100

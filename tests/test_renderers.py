@@ -1,17 +1,27 @@
 """Tests for all renderers."""
 from __future__ import annotations
 
+import json
+
 from gitlog.core.models import Changelog, ChangelogEntry, CommitType
+from gitlog.renderers.html import HtmlRenderer
 from gitlog.renderers.json import JsonRenderer
 from gitlog.renderers.markdown import MarkdownRenderer
 from gitlog.renderers.twitter import TwitterRenderer
 from tests.fixtures.sample_commits import CONVENTIONAL_COMMITS
-import json
 
 
 def _make_entry() -> ChangelogEntry:
-    feat_commits = [c for c in CONVENTIONAL_COMMITS if c.commit_type == CommitType.FEAT]
-    fix_commits = [c for c in CONVENTIONAL_COMMITS if c.commit_type == CommitType.FIX]
+    feat_commits = [
+        c.model_copy(update={"scope": "ui"})
+        for c in CONVENTIONAL_COMMITS
+        if c.commit_type == CommitType.FEAT
+    ]
+    fix_commits = [
+        c.model_copy(update={"scope": "auth"})
+        for c in CONVENTIONAL_COMMITS
+        if c.commit_type == CommitType.FIX
+    ]
     return ChangelogEntry(
         version="v1.2.0",
         date="2024-01-15",
@@ -51,6 +61,24 @@ class TestMarkdownRenderer:
     def test_empty_changelog(self):
         output = MarkdownRenderer().render(Changelog(entries=[]))
         assert "Changelog" in output
+
+    def test_localized_header_zh_tw(self):
+        output = MarkdownRenderer(language="zh-TW").render(_make_changelog())
+        assert "變更日誌" in output
+
+    def test_group_by_scope_shows_scope_heading(self):
+        output = MarkdownRenderer(group_by_scope=True).render(_make_changelog())
+        assert "Scope:" in output and "`auth`" in output
+
+
+class TestHtmlRenderer:
+    def test_localized_labels_zh_tw(self):
+        output = HtmlRenderer(language="zh-TW").render(_make_changelog())
+        assert "切換深色模式" in output
+
+    def test_group_by_scope_shows_scope_heading(self):
+        output = HtmlRenderer(group_by_scope=True).render(_make_changelog())
+        assert "Scope:" in output and "<code>auth</code>" in output
 
 
 class TestJsonRenderer:

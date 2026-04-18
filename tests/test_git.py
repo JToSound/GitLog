@@ -49,6 +49,22 @@ class TestGitLogParser:
         assert commits == []
 
     @patch("gitlog.core.git.Repo")
+    def test_get_commits_passes_paths_and_max_count(self, mock_repo_cls):
+        mock_repo = MagicMock()
+        mock_repo_cls.return_value = mock_repo
+        mock_repo.iter_commits.return_value = []
+        mock_repo.tags = []
+
+        parser = GitLogParser()
+        commits = parser.get_commits(since="v1.0.0", paths=["src/gitlog"], max_count=5)
+
+        assert commits == []
+        args, kwargs = mock_repo.iter_commits.call_args
+        assert args[0] == "v1.0.0..HEAD"
+        assert kwargs["paths"] == ["src/gitlog"]
+        assert kwargs["max_count"] == 5
+
+    @patch("gitlog.core.git.Repo")
     def test_pr_ref_parsed(self, mock_repo_cls):
         mock_repo = MagicMock()
         mock_repo_cls.return_value = mock_repo

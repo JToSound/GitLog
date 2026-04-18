@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import Any
 
-from gitlog.core.models import Changelog
+from gitlog.core.models import Changelog, Commit
 
 
 class JsonRenderer:
@@ -19,7 +20,7 @@ class JsonRenderer:
         Returns:
             JSON-formatted string.
         """
-        def _commit_to_dict(c):
+        def _commit_to_dict(c: Commit) -> dict[str, Any]:
             return {
                 "sha": c.sha,
                 "message": c.message,
@@ -31,19 +32,17 @@ class JsonRenderer:
                 "prs": c.pr_number,
             }
 
-        def _serialize_date(d):
+        def _serialize_date(d: Any) -> str | None:
             if d is None:
                 return None
-            try:
-                if hasattr(d, "isoformat"):
-                    # Prefer YYYY-MM-DD when the datetime has zeroed time
-                    if isinstance(d, datetime):
-                        if d.hour == 0 and d.minute == 0 and d.second == 0:
-                            return d.date().isoformat()
-                        return d.isoformat()
-            except Exception:
-                pass
-            return d
+            if isinstance(d, datetime):
+                # Prefer YYYY-MM-DD when the datetime has zeroed time
+                if d.hour == 0 and d.minute == 0 and d.second == 0:
+                    return d.date().isoformat()
+                return d.isoformat()
+            if isinstance(d, str):
+                return d
+            return str(d)
 
         data = {
             "entries": [

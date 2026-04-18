@@ -1,6 +1,9 @@
 """Tests for the commit classification engine."""
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
+from gitlog.config import GitlogConfig
 from gitlog.core.classifier import CommitClassifier, RuleBasedClassifier
 from gitlog.core.models import Commit, CommitType
 
@@ -71,3 +74,46 @@ class TestCommitClassifier:
         clf = CommitClassifier(default_config)
         result = clf.classify_all(sample_all_commits)
         assert len(result) == len(sample_all_commits)
+
+    def test_uses_configured_provider(self, monkeypatch):
+        mock_provider = MagicMock()
+        mock_provider.complete_json.return_value = {"types": ["fix"]}
+        monkeypatch.setattr(
+            "gitlog.core.classifier.create_provider",
+            lambda _provider, _model: mock_provider,
+        )
+
+        cfg = GitlogConfig(llm_provider="openai", model="gpt-4o-mini")
+        clf = CommitClassifier(cfg)
+        commits = [Commit(sha="x", message="random message", author="a", date="2024-01-01")]
+        result = clf.classify_all(commits)
+
+        assert result[0].commit_type == CommitType.FIX
+        mock_provider.complete_json.assert_called_once()
+
+    def test_uses_custom_classify_prompt(self, monkeypatch):
+        seen_system_prompts: list[str] = []
+
+        class _Provider:
+            def complete_json(self, system: str, user: str):
+                seen_system_prompts.append(system)
+                return {"types": ["chore"]}
+
+        monkeypatch.setattr(
+            "gitlog.core.classifier.create_provider",
+            lambda _provider, _model: _Provider(),
+        )
+
+        cfg = GitlogConfig(
+            llm_provider="openai",
+            model="gpt-4o-mini",
+            prompts={"classify_system": "CUSTOM SYSTEM PROMPT"},
+        )
+        clf = CommitClassifier(cfg)
+        commits = [Commit(sha="x", message="random message", author="a", date="2024-01-01")]
+        result = clf.classify_all(commits)
+
+        assert result[0].commit_type == CommitType.CHORE
+        assert seen_system_prompts and seen_system_prompts[0].startswith(
+            "CUSTOM SYSTEM PROMPT"
+        )

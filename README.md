@@ -75,6 +75,9 @@ gitlog generate
 # From a specific version
 gitlog generate --since v1.2.0
 
+# Only include a package/path in monorepo
+gitlog generate --path packages/api --path packages/shared
+
 # HTML report
 gitlog generate --format html
 
@@ -95,6 +98,13 @@ gitlog tweet
 
 # ASCII commit statistics
 gitlog stats
+
+# Predict next semantic version (CI-friendly)
+gitlog next-version --json
+
+# Predict prerelease/hotfix version
+gitlog next-version --prerelease rc
+gitlog next-version --hotfix
 
 # Interactive setup
 gitlog init
@@ -144,6 +154,9 @@ project_description = "A developer tool for..."
 exclude_patterns = ["^chore\\(deps\\)", "^Merge branch"]
 group_by_scope = true
 max_commits_per_group = 20
+paths = []
+commit_search_depth = 0
+llm_batch_size = 40
 
 [gitlog.github]
 repo = "owner/repo"
@@ -153,7 +166,7 @@ repo = "owner/repo"
 
 | Parameter | Default | Description |
 |---|---|---|
-| `llm_provider` | `openai` | LLM provider: `openai`, `anthropic`, `ollama` |
+| `llm_provider` | `openai` | LLM provider: `openai`, `anthropic`, `ollama`, `gemini` |
 | `model` | `gpt-4o-mini` | Model identifier |
 | `language` | `en` | Output language: `en`, `zh-TW`, `zh-CN`, `ja` |
 | `format` | `markdown` | Output format: `markdown`, `json`, `html`, `twitter` |
@@ -162,6 +175,9 @@ repo = "owner/repo"
 | `exclude_patterns` | see default | Regex list of commit messages to skip |
 | `group_by_scope` | `true` | Group commits by conventional commit scope |
 | `max_commits_per_group` | `20` | Max commits shown per category per version |
+| `paths` | `[]` | Optional path filters (monorepo-friendly) |
+| `commit_search_depth` | `0` | Max commits to scan (`0` means unlimited) |
+| `llm_batch_size` | `40` | Max commits per LLM classification batch |
 | `github.repo` | `""` | `owner/repo` for generating clickable links |
 
 ---

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict
+from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CommitType(str, Enum):
@@ -59,21 +59,25 @@ class Commit(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     sha: str
-    short_sha: Optional[str] = None
+    short_sha: str | None = None
     message: str
     subject: str = ""
     body: str = ""
     author: Author = Field(default_factory=Author)
-    timestamp: Optional[datetime | str] = None
+    timestamp: datetime | str | None = None
     commit_type: CommitType = CommitType.MISC
-    scope: Optional[str] = None
+    scope: str | None = None
     is_breaking: bool = False
-    pr_number: Optional[str] = None
+    pr_number: str | None = None
     issue_refs: list[str] = Field(default_factory=list)
     co_authors: list[Author] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
     @model_validator(mode="before")
-    def _normalize_legacy_inputs(cls, data: dict):
+    def _normalize_legacy_inputs(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
         # Accept `date` as an alias for `timestamp` (fixtures pass a string).
         if "date" in data and "timestamp" not in data:
             data["timestamp"] = data.pop("date")
@@ -93,7 +97,7 @@ class Commit(BaseModel):
         return data
 
     @property
-    def date(self) -> Optional[str | datetime]:
+    def date(self) -> str | datetime | None:
         """Legacy alias used in tests/fixtures returning the raw timestamp.
 
         If the timestamp is a datetime, return an ISO string to match prior
@@ -111,7 +115,7 @@ class Tag(BaseModel):
 
     name: str
     sha: str
-    date: Optional[datetime] = None
+    date: datetime | None = None
 
 
 class ChangelogEntry(BaseModel):
@@ -124,8 +128,8 @@ class ChangelogEntry(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     version: str
-    date: Optional[datetime] = None
-    groups: Dict[CommitType, list[Commit]] = Field(default_factory=dict)
+    date: datetime | None = None
+    groups: dict[CommitType, list[Commit]] = Field(default_factory=dict)
 
     # Legacy convenience fields (kept for compatibility with older code/tests)
     breaking_changes: list[Commit] = Field(default_factory=list)
@@ -137,7 +141,7 @@ class ChangelogEntry(BaseModel):
     misc: list[Commit] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _sync_legacy_lists(self):
+    def _sync_legacy_lists(self) -> ChangelogEntry:
         # If `groups` is populated, fill legacy lists for backward compat.
         if self.groups:
             self.breaking_changes = self.groups.get(CommitType.BREAKING, [])
@@ -164,4 +168,4 @@ class Changelog(BaseModel):
 
     project_name: str = ""
     entries: list[ChangelogEntry] = Field(default_factory=list)
-    unreleased: Optional[ChangelogEntry] = None
+    unreleased: ChangelogEntry | None = None

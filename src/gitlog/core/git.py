@@ -10,13 +10,14 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
+from typing import Any
 
 from gitlog.core.models import Author, Commit, CommitType, Tag
 
 # Try to import GitPython's Repo and expose the symbol so tests can patch it.
+Repo: Any
 try:
-    from git import Repo  # type: ignore
+    from git import Repo as Repo
 except Exception:  # pragma: no cover - absent in some environments
     Repo = None
 
@@ -42,7 +43,7 @@ class GitLogParser:
     def __init__(self, repo_path: Path | None = None) -> None:
         self.repo_path = repo_path or Path.cwd()
         # _repo will be an instance of GitPython's Repo when available.
-        self._repo = None
+        self._repo: Any | None = None
         if Repo is not None:
             try:
                 self._repo = Repo(self.repo_path)
@@ -77,6 +78,7 @@ class GitLogParser:
         include_body: bool = True,
         include_pr_refs: bool = True,
         paths: list[str] | None = None,
+        max_count: int | None = None,
     ) -> list[Commit]:
         """Fetch and parse git commits.
 
@@ -101,14 +103,25 @@ class GitLogParser:
             elif until:
                 rev = until
 
-            iterator = self._repo.iter_commits(rev) if rev else self._repo.iter_commits()
+            iter_kwargs: dict[str, Any] = {}
+            if paths:
+                iter_kwargs["paths"] = paths
+            if max_count is not None and max_count > 0:
+                iter_kwargs["max_count"] = max_count
+            iterator = (
+                self._repo.iter_commits(rev, **iter_kwargs)
+                if rev
+                else self._repo.iter_commits(**iter_kwargs)
+            )
             return [self._from_gitpython_commit(c, include_pr_refs) for c in iterator]
 
         # Fallback to calling `git` directly when GitPython isn't present.
         sep = "\x1E"
         rec_sep = "\x1F"
-        fmt = sep.join(["%H", "%h", "%s", "%b", "%aN", "%aE", "%aI"]) + rec_sep
+        fmt = sep.join(["%H", "%h", "%s", "%b", "%aN", "%aE", "%aI", "%D"]) + rec_sep
         cmd = ["git", "log", f"--format={fmt}", "--no-merges"]
+        if max_count is not None and max_count > 0:
+            cmd.extend(["--max-count", str(max_count)])
 
         if since and until:
             cmd.append(f"{since}..{until}")
@@ -127,7 +140,7 @@ class GitLogParser:
             if not record:
                 continue
             parts = record.split(sep)
-            if len(parts) < 7:
+            if len(parts) < 8:
                 continue
             try:
                 commits.append(self._parse_record(parts, include_pr_refs))
@@ -145,9 +158,19 @@ class GitLogParser:
         Returns:
             Parsed Commit object.
         """
-        sha, short_sha, subject, body, author_name, author_email, iso_date = parts[:7]
+        (
+            sha,
+            short_sha,
+            subject,
+            body,
+            author_name,
+            author_email,
+            iso_date,
+            decorations,
+        ) = parts[:8]
         full_message = f"{subject}\n{body}".strip()
         commit_type, scope, is_breaking = self._classify_conventional(subject, body)
+        tags = [tag.strip() for tag in re.findall(r"tag:\s*([^,]+)", decorations)]
 
         pr_number: str | None = None
         issue_refs: list[str] = []
@@ -168,7 +191,7 @@ class GitLogParser:
             timestamp=datetime.fromisoformat(iso_date),
             commit_type=commit_type, scope=scope or None,
             is_breaking=is_breaking, pr_number=pr_number,
-            issue_refs=issue_refs, co_authors=co_authors,
+            issue_refs=issue_refs, co_authors=co_authors, tags=tags,
         )
 
     def _from_gitpython_commit(self, c: object, include_pr_refs: bool) -> Commit:
@@ -201,6 +224,14 @@ class GitLogParser:
             for name, email in _CO_AUTHOR.findall(body):
                 co_authors.append(Author(name=name.strip(), email=email.strip()))
 
+        tags: list[str] = []
+        refs_obj = getattr(c, "refs", [])
+        if isinstance(refs_obj, (list, tuple, set)):
+            for ref in refs_obj:
+                ref_name = str(getattr(ref, "name", "")).strip()
+                if ref_name and re.match(r"^v?\d+\.\d+", ref_name):
+                    tags.append(ref_name)
+
         author_obj = getattr(c, "author", None)
         author_name = getattr(author_obj, "name", "") or ""
         author_email = getattr(author_obj, "email", "") or ""
@@ -230,6 +261,7 @@ class GitLogParser:
             pr_number=pr_number,
             issue_refs=issue_refs,
             co_authors=co_authors,
+            tags=tags,
         )
 
     def _classify_conventional(self, subject: str, body: str) -> tuple[CommitType, str, bool]:

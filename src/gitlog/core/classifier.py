@@ -1,17 +1,15 @@
 """Commit classification engine with rule-based and LLM-powered layers."""
 from __future__ import annotations
 
-import json
 import re
 from typing import TYPE_CHECKING
 
-from tenacity import retry, stop_after_attempt, wait_exponential
-
 from gitlog.core.models import Commit, CommitType
-from gitlog.exceptions import LLMError
+from gitlog.providers import create_provider
 
 if TYPE_CHECKING:
     from gitlog.config import GitlogConfig
+    from gitlog.providers.base import BaseProvider
 
 # ---------------------------------------------------------------------------
 # Regex patterns for Conventional Commits
@@ -69,40 +67,16 @@ class RuleBasedClassifier:
 class LLMClassifier:
     """Layer-2: batched LLM classifier for non-conventional commits."""
 
-    _CHUNK_SIZE = 40  # max commits per LLM request
+    _DEFAULT_CHUNK_SIZE = 40  # max commits per LLM request
 
-    def __init__(self, config: "GitlogConfig") -> None:
+    def __init__(self, config: GitlogConfig) -> None:
         self._config = config
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        reraise=True,
-    )
-    def _call_llm(self, messages: list[dict]) -> str:
-        """Send a single batched classification request to the LLM.
-
-        Args:
-            messages: Chat messages formatted for the LLM API.
-
-        Returns:
-            Raw string response from the model.
-
-        Raises:
-            LLMError: When the provider call fails after retries.
-        """
-        try:
-            import litellm  # type: ignore[import]
-
-            response = litellm.completion(
-                model=self._config.model,
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=0,
-            )
-            return response.choices[0].message.content or ""
-        except Exception as exc:  # pragma: no cover
-            raise LLMError(f"LLM call failed: {exc}") from exc
+        self._chunk_size = (
+            config.llm_batch_size if config.llm_batch_size > 0 else self._DEFAULT_CHUNK_SIZE
+        )
+        self._provider: BaseProvider | None = None
+        if config.llm_provider:
+            self._provider = create_provider(config.llm_provider, config.model)
 
     def classify_batch(self, commits: list[Commit]) -> list[CommitType]:
         """Classify a list of commits using the LLM in batches.
@@ -114,23 +88,27 @@ class LLMClassifier:
             List of CommitType values in the same order as the input.
         """
         results: list[CommitType] = []
-        for i in range(0, len(commits), self._CHUNK_SIZE):
-            chunk = commits[i : i + self._CHUNK_SIZE]
+        for i in range(0, len(commits), self._chunk_size):
+            chunk = commits[i : i + self._chunk_size]
             results.extend(self._classify_chunk(chunk))
         return results
 
     def _classify_chunk(self, commits: list[Commit]) -> list[CommitType]:
         """Classify a single chunk of commits."""
+        if self._provider is None:
+            return [CommitType.MISC] * len(commits)
+
         numbered = "\n".join(
             f"{idx + 1}. {c.message[:200]}" for idx, c in enumerate(commits)
         )
-        system_prompt = (
+        default_system_prompt = (
             "You are a changelog classifier. "
             "Classify each git commit into EXACTLY one of: "
             "feat, fix, perf, refactor, docs, chore, breaking.\n"
             "Return a JSON object with key 'types' containing an array matching the input order.\n"
             "Be concise. Do not explain."
         )
+        system_prompt = self._config.prompts.classify_system.strip() or default_system_prompt
         if self._config.project_description:
             system_prompt += f"\nProject context: {self._config.project_description}"
 
@@ -140,13 +118,7 @@ class LLMClassifier:
         )
 
         try:
-            raw = self._call_llm(
-                [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ]
-            )
-            data = json.loads(raw)
+            data = self._provider.complete_json(system_prompt, user_prompt)
             types_raw: list[str] = data.get("types", [])
             mapping = {
                 "feat": CommitType.FEAT,
@@ -168,7 +140,7 @@ class LLMClassifier:
 class CommitClassifier:
     """Orchestrates rule-based (Layer 1) + LLM (Layer 2) classification."""
 
-    def __init__(self, config: "GitlogConfig") -> None:
+    def __init__(self, config: GitlogConfig) -> None:
         self._rule = RuleBasedClassifier()
         self._llm = LLMClassifier(config)
         self._use_llm = bool(config.llm_provider)
@@ -195,7 +167,7 @@ class CommitClassifier:
 
         if unclassified and self._use_llm:
             llm_types = self._llm.classify_batch(unclassified)
-            for idx, ct in zip(unclassified_idx, llm_types):
+            for idx, ct in zip(unclassified_idx, llm_types, strict=False):
                 commits[idx] = commits[idx].model_copy(update={"commit_type": ct})
         else:
             for idx in unclassified_idx:

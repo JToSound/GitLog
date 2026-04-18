@@ -4,7 +4,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from gitlog.core.generator import ChangelogGenerator, _deduplicate
-from gitlog.core.models import Commit, CommitType
+from gitlog.core.models import Commit, Tag
 
 
 class TestDeduplicate:
@@ -35,7 +35,13 @@ class TestChangelogGenerator:
 
     @patch("gitlog.core.generator.GitLogParser")
     @patch("gitlog.core.generator.CommitClassifier")
-    def test_generate_unreleased(self, mock_clf_cls, mock_parser_cls, default_config, sample_conventional_commits):
+    def test_generate_unreleased(
+        self,
+        mock_clf_cls,
+        mock_parser_cls,
+        default_config,
+        sample_conventional_commits,
+    ):
         mock_parser = MagicMock()
         mock_parser_cls.return_value = mock_parser
         mock_parser.get_unreleased_commits.return_value = sample_conventional_commits
@@ -51,7 +57,13 @@ class TestChangelogGenerator:
 
     @patch("gitlog.core.generator.GitLogParser")
     @patch("gitlog.core.generator.CommitClassifier")
-    def test_generate_full(self, mock_clf_cls, mock_parser_cls, default_config, sample_conventional_commits):
+    def test_generate_full(
+        self,
+        mock_clf_cls,
+        mock_parser_cls,
+        default_config,
+        sample_conventional_commits,
+    ):
         mock_parser = MagicMock()
         mock_parser_cls.return_value = mock_parser
         mock_parser.get_tags.return_value = []
@@ -65,3 +77,23 @@ class TestChangelogGenerator:
         changelog = gen.generate()
 
         assert len(changelog.entries) >= 1
+
+    def test_partitions_entries_by_tag_boundaries(self, default_config):
+        gen = ChangelogGenerator(default_config)
+        gen._parser = MagicMock()
+        gen._parser.get_tags.return_value = [
+            Tag(name="v2.0.0", sha="t2000"),
+            Tag(name="v1.0.0", sha="t1000"),
+        ]
+
+        commits = [
+            Commit(sha="u0001", message="fix: unreleased patch", author="a", date="2024-01-05"),
+            Commit(sha="t2000", message="feat: shipped in v2", author="a", date="2024-01-04"),
+            Commit(sha="b0001", message="fix: included in v2", author="a", date="2024-01-03"),
+            Commit(sha="t1000", message="feat: shipped in v1", author="a", date="2024-01-02"),
+        ]
+
+        changelog = gen.generate(commits=commits)
+        versions = [entry.version for entry in changelog.entries]
+
+        assert versions == ["Unreleased", "v2.0.0", "v1.0.0"]

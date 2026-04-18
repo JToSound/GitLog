@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -37,7 +38,7 @@ class AnthropicProvider(BaseProvider):
             LLMError: On API failure.
         """
         try:
-            import litellm  # type: ignore[import]
+            import litellm
 
             resp = litellm.completion(
                 model=f"anthropic/{self._model}",
@@ -51,7 +52,7 @@ class AnthropicProvider(BaseProvider):
         except Exception as exc:
             raise LLMError(str(exc)) from exc
 
-    def complete_json(self, system: str, user: str) -> dict:
+    def complete_json(self, system: str, user: str) -> dict[str, Any]:
         """Call Anthropic and parse JSON from the response.
 
         Args:
@@ -68,6 +69,9 @@ class AnthropicProvider(BaseProvider):
             system + "\nRespond ONLY with valid JSON.", user
         )
         try:
-            return json.loads(raw)
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                raise LLMError("Model did not return a JSON object.")
+            return data
         except json.JSONDecodeError as exc:
             raise LLMError(f"JSON parse error: {exc}\nRaw: {raw[:200]}") from exc

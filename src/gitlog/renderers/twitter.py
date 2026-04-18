@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from gitlog.core.models import ChangelogEntry, CommitType
-from gitlog.exceptions import LLMError
 
 
 class TwitterRenderer:
@@ -39,7 +38,7 @@ class TwitterRenderer:
         )
 
         try:
-            import litellm  # type: ignore[import]
+            import litellm
 
             bullets = "\n".join(summary_lines[:6]) or "General improvements."
             prompt = (
