@@ -12,6 +12,7 @@ It helps teams stop writing release notes manually and keep release communicatio
 1. If this saves your workflow time, please star the repo.
 2. Tell us your release pain point in Issues.
 3. Share your workflow in Discussions so we can prioritize features.
+4. For feature ideas, include mechanism + prediction + falsification so we can evaluate quickly.
 
 ---
 

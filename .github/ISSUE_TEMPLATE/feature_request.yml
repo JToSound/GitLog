@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the suggestion. Feature requests with concrete workflow context are prioritized faster.
+        Thanks for the suggestion. We prioritize **testable** proposals: explain why it should work, what should change, and what result would prove it wrong.
   - type: input
     id: problem
     attributes:
@@ -23,12 +23,69 @@ body:
       placeholder: Monorepo with 8 packages, weekly release cadence, GitHub Actions ...
     validations:
       required: true
+  - type: dropdown
+    id: target_layer
+    attributes:
+      label: Target layer in LogForge
+      description: Which layer should change?
+      options:
+        - CLI / config UX
+        - Git parser
+        - Commit classifier
+        - Changelog generator
+        - Markdown/HTML/JSON renderer
+        - CI/release workflow
+        - Documentation only
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence from your current workflow
+      description: Provide concrete examples (commands, sample commits, release output, screenshots, or logs)
+      placeholder: |
+        Current command:
+        gitlog generate --path packages/api
+
+        Unexpected output:
+        ...
+    validations:
+      required: true
   - type: textarea
     id: proposal
     attributes:
       label: Proposed solution
       description: What behavior do you want?
       placeholder: Add a command/flag/config that ...
+    validations:
+      required: true
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: Causal mechanism (why this should work)
+      description: Explain how changing X to Z should alter behavior in the chosen layer
+      placeholder: |
+        Today the classifier does X in context Y.
+        If changed to Z, behavior should change because ...
+    validations:
+      required: true
+  - type: textarea
+    id: prediction
+    attributes:
+      label: Testable prediction
+      description: What observable result should change if this proposal is correct?
+      placeholder: |
+        After change, running `gitlog ...` should produce ...
+        Metric/output expected to improve: ...
+    validations:
+      required: true
+  - type: textarea
+    id: falsification
+    attributes:
+      label: What result would disprove this proposal?
+      description: Define the observation that would show the idea is wrong
+      placeholder: |
+        If we run ... and still observe ..., the proposal is falsified.
     validations:
       required: true
   - type: textarea
@@ -45,4 +102,11 @@ body:
         - High
         - Medium
         - Low
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Proposal readiness checklist
+      options:
+        - label: I included mechanism, prediction, and falsification criteria.
+          required: true
 

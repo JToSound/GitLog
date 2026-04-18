@@ -48,11 +48,17 @@ This document is the execution guide for increasing project traffic and engageme
    ```powershell
    gh issue list --repo JToSound/LogForge --state open
    gh issue list --repo JToSound/LogForge --state open --label "good first issue"
+   gh issue list --repo JToSound/LogForge --state open --label "feature request"
    ```
 
 2. Keep at least:
-   - 1 pinned "pain points" issue open
-   - 3+ "good first issue" items open
+    - 1 pinned "pain points" issue open
+    - 3+ "good first issue" items open
+
+3. Apply the proposal-quality gate for feature ideas:
+   - Require mechanism + prediction + falsification before roadmap intake.
+   - If incomplete, label as `needs mechanism` and request missing fields.
+   - Use: [docs/PROPOSAL_QUALITY_PROTOCOL.md](docs/PROPOSAL_QUALITY_PROTOCOL.md)
 
 ### C. Convert feedback into contributions
 
@@ -91,9 +97,10 @@ gh label create "bug" --repo $repo --color "d73a4a" --description "Something is 
 gh label create "feature request" --repo $repo --color "a2eeef" --description "New capability request"
 gh label create "question" --repo $repo --color "d876e3" --description "Usage question"
 gh label create "docs" --repo $repo --color "0075ca" --description "Documentation improvements"
+gh label create "needs mechanism" --repo $repo --color "fbca04" --description "Proposal missing causal mechanism/prediction/falsification"
 gh issue create --repo $repo --title "Tell us your release workflow pain points" --body "Share your current release process, biggest pain, and preferred output format." --label "question"
 gh issue create --repo $repo --title "good first issue: Improve README onboarding for first-time users" --body "Refine the top README section for faster first run success." --label "good first issue,help wanted,docs"
-gh issue create --repo $repo --title "feature request: monorepo component-focused changelog output" --body "Describe required component naming and path filtering behavior for your monorepo." --label "feature request"
+gh issue create --repo $repo --title "feature request: monorepo component-focused changelog output" --body "Describe required component naming and path filtering behavior for your monorepo. Include mechanism, prediction, and falsification criteria." --label "feature request"
 gh discussion create --repo $repo --category "General" --title "Show us your changelog workflow" --body "Post your repository type, release cadence, and the release-note pain point you want solved."
 ```
 

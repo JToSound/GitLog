@@ -43,7 +43,11 @@ gh issue list --repo JToSound/LogForge --state open --limit 20
 Actions:
 1. Respond to every new issue/question quickly.
 2. Convert good feedback into labeled roadmap issues.
-3. Ask commenters to share repository/workflow details.
+3. For feature ideas, require mechanism + prediction + falsification before prioritizing.
+4. Ask commenters to share repository/workflow details and observable success criteria.
+
+Reference protocol:
+- `docs/PROPOSAL_QUALITY_PROTOCOL.md`
 
 ## 5) Manual tasks that cannot be fully automated cross-platform
 

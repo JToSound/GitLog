@@ -245,6 +245,7 @@ Or use the included `release.yml` which automatically:
 - ❓ Ask question: https://github.com/JToSound/LogForge/issues/new?template=question.yml
 - 💬 Discussions: https://github.com/JToSound/LogForge/discussions
 - 📈 Growth execution playbook: [docs/GROWTH_EXECUTION_PLAYBOOK.md](docs/GROWTH_EXECUTION_PLAYBOOK.md)
+- 🧪 Proposal quality protocol: [docs/PROPOSAL_QUALITY_PROTOCOL.md](docs/PROPOSAL_QUALITY_PROTOCOL.md)
 
 ---
 

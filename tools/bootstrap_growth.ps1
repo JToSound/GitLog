@@ -128,6 +128,7 @@ Upsert-Label "bug" "d73a4a" "Something is not working"
 Upsert-Label "feature request" "a2eeef" "New capability request"
 Upsert-Label "question" "d876e3" "Usage question"
 Upsert-Label "docs" "0075ca" "Documentation improvements"
+Upsert-Label "needs mechanism" "fbca04" "Proposal missing mechanism/prediction/falsification details"
 
 if ($SeedIssues) {
     Write-Step "Creating seed engagement issues"
@@ -143,7 +144,7 @@ if ($SeedIssues) {
 
     Ensure-Issue `
         "feature request: monorepo component-focused changelog output" `
-        "Describe required component naming and path filtering behavior for your monorepo." `
+        "Describe required component naming and path filtering behavior for your monorepo. Include mechanism, prediction, and falsification criteria." `
         "feature request"
 }
 
