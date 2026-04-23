@@ -19,15 +19,44 @@ Supports **multiple languages**, **multiple output formats**, and **any LLM**.
 
 ## Quick Start
 
+### 1. Install
+
 ```bash
-# Install directly from GitHub (recommended until published to PyPI)
+# Recommended: uv (fastest)
+uv tool install gitlog
+
+# Or pip
+pip install gitlog
+
+# Or install directly from GitHub
 pip install git+https://github.com/JToSound/LogForge.git
+```
+
+**Requirements:** Python 3.11+ and Git.
+
+### 2. Configure your API key
+
+```bash
+# Option A: environment variable (recommended for CI)
+export OPENAI_API_KEY="sk-..."
+
+# Option B: .env file in your repo root
+echo "OPENAI_API_KEY=sk-..." > .env
+
+# Option C: use a local model (no key needed)
+gitlog generate --model ollama/llama3
+```
+
+### 3. Generate your first changelog
+
+```bash
 cd your-repo
-export OPENAI_API_KEY=sk-...
 gitlog generate
 ```
 
 That's it. Your `CHANGELOG.md` is ready. 🎉
+
+> **New to gitlog?** Run `gitlog init` for an interactive setup wizard that creates a `.gitlog.toml` tailored to your project.
 
 ---
 
